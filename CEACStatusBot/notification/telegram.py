@@ -29,7 +29,8 @@ class TelegramNotificationHandle(NotificationHandle):
             f"*Status:* {escape_md(str(result.get('status', '')))}",
             f"*Visa Type:* {escape_md(str(result.get('visa_type', '')))}",
             f"*Case Created:* {escape_md(str(result.get('case_created', '')))}",
-            f"*Last Updated:* {escape_md(str(result.get('case_last_updated', '')))} - {escape_md(days_text)} ago",
+            f"*Last Updated Date:* {escape_md(str(result.get('case_last_updated', '')))}",
+            f"*Last Updated Age:* {escape_md(days_text)} ago",
             f"*Checked At:* {escape_md(str(result.get('time', '')))}",
         ])
         message_title = escape_md(message_title)
