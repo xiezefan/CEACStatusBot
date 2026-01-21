@@ -23,15 +23,14 @@ class TelegramNotificationHandle(NotificationHandle):
             days_text = f"{result['days_since_last_updated']} day(s)"
         # Build a concise Markdown message without Description.
         message_content = "\n".join([
-            f"*Case:* {result.get('application_num_origin', '')}",
-            f"*Status:* {result.get('status', '')}",
-            f"*Visa Type:* {result.get('visa_type', '')}",
-            f"*Case Created:* {result.get('case_created', '')}",
-            f"*Last Updated:* {result.get('case_last_updated', '')} ({days_text} ago)",
-            f"*Checked At:* {result.get('time', '')}",
+            f"*Case:* {escape_md(str(result.get('application_num_origin', '')))}",
+            f"*Status:* {escape_md(str(result.get('status', '')))}",
+            f"*Visa Type:* {escape_md(str(result.get('visa_type', '')))}",
+            f"*Case Created:* {escape_md(str(result.get('case_created', '')))}",
+            f"*Last Updated:* {escape_md(str(result.get('case_last_updated', '')))} ({escape_md(days_text)} ago)",
+            f"*Checked At:* {escape_md(str(result.get('time', '')))}",
         ])
         message_title = escape_md(message_title)
-        message_content = escape_md(message_content)
 
         # Construct the message text with the title in bold
         message_text = f"*{message_title}*\n\n{message_content}"
