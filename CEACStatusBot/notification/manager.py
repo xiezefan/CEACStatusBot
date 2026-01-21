@@ -75,7 +75,9 @@ class NotificationManager:
                 last_sent_str = last_record.get("last_sent") or last_record.get("date")
                 last_sent_dt = self.__parse_iso_datetime(last_sent_str)
                 if last_sent_dt:
-                    hours_since_last_send = (self.__now_local() - last_sent_dt).total_seconds() / 3600.0
+                    now_dt = self.__normalize_dt(self.__now_local())
+                    last_dt = self.__normalize_dt(last_sent_dt)
+                    hours_since_last_send = (now_dt - last_dt).total_seconds() / 3600.0
                     if hours_since_last_send >= 24:
                         should_send = True
 
@@ -151,6 +153,12 @@ class NotificationManager:
             return datetime.datetime.fromisoformat(value)
         except ValueError:
             return None
+
+    def __normalize_dt(self, dt: datetime.datetime) -> datetime.datetime:
+        # Normalize datetimes to naive UTC for safe subtraction.
+        if dt.tzinfo is None:
+            return dt
+        return dt.astimezone(datetime.timezone.utc).replace(tzinfo=None)
 
     def __days_since_last_updated(self, case_last_updated: str) -> int | None:
         # CEAC uses "19-Oct-2022" style; compute days since that date.
