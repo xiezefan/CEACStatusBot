@@ -26,10 +26,9 @@ def query_status(location, application_num, passport_number, surname, captchaHan
         print(e)
         return {"success": False, "error": f"GET status page failed: {e}"}
     print(f"Status page response: {r.status_code}, bytes={len(r.text)}")
-    if os.getenv("CEAC_DEBUG_FULL") == "1":
-        # Full HTML dump for debugging when CEAC changes page structure.
-        print("Status page full response:")
-        print(r.text)
+    # Full HTML dump for debugging when CEAC changes page structure.
+    print("Status page full response:")
+    print(r.text)
 
     def extract_update_panel_html(response_text: str, panel_id: str) -> str | None:
         # ASP.NET async postback format: ...|updatePanel|<panel_id>|<html>|
@@ -116,10 +115,9 @@ def query_status(location, application_num, passport_number, surname, captchaHan
         print(e)
         return {"success": False, "error": f"POST status form failed: {e}"}
     print(f"Status form response: {r.status_code}, bytes={len(r.text)}")
-    if os.getenv("CEAC_DEBUG_FULL") == "1":
-        # Full HTML dump for debugging when CEAC changes page structure.
-        print("Status form full response:")
-        print(r.text)
+    # Full HTML dump for debugging when CEAC changes page structure.
+    print("Status form full response:")
+    print(r.text)
 
     panel_html = extract_update_panel_html(r.text, "ctl00_ContentPlaceHolder1_UpdatePanel1")
     if panel_html:
