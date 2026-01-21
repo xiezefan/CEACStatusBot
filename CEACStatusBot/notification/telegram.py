@@ -20,14 +20,16 @@ class TelegramNotificationHandle(NotificationHandle):
         message_title = f"[CEACStatusBot] {result['application_num_origin']}: {result['status']}"
         days_text = "N/A"
         if result.get("days_since_last_updated") is not None:
-            days_text = f"{result['days_since_last_updated']} day(s)"
+            days_count = result["days_since_last_updated"]
+            unit = "day" if days_count == 1 else "days"
+            days_text = f"{days_count} {unit}"
         # Build a concise Markdown message without Description.
         message_content = "\n".join([
             f"*Case:* {escape_md(str(result.get('application_num_origin', '')))}",
             f"*Status:* {escape_md(str(result.get('status', '')))}",
             f"*Visa Type:* {escape_md(str(result.get('visa_type', '')))}",
             f"*Case Created:* {escape_md(str(result.get('case_created', '')))}",
-            f"*Last Updated:* {escape_md(str(result.get('case_last_updated', '')))} ({escape_md(days_text)} ago)",
+            f"*Last Updated:* {escape_md(str(result.get('case_last_updated', '')))} - {escape_md(days_text)} ago",
             f"*Checked At:* {escape_md(str(result.get('time', '')))}",
         ])
         message_title = escape_md(message_title)
