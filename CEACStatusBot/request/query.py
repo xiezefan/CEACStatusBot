@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -25,6 +26,20 @@ def query_status(location, application_num, passport_number, surname, captchaHan
         print(e)
         return {"success": False, "error": f"GET status page failed: {e}"}
     print(f"Status page response: {r.status_code}, bytes={len(r.text)}")
+    # Full HTML dump for debugging when CEAC changes page structure.
+    print("Status page full response:")
+    print(r.text)
+
+    def extract_update_panel_html(response_text: str, panel_id: str) -> str | None:
+        # ASP.NET async postback format: ...|updatePanel|<panel_id>|<html>|
+        if "updatePanel" not in response_text:
+            return None
+        parts = response_text.split("|")
+        for i, part in enumerate(parts):
+            if part == "updatePanel" and i + 2 < len(parts):
+                if parts[i + 1] == panel_id:
+                    return parts[i + 2]
+        return None
 
     soup = BeautifulSoup(r.text, features="lxml")
 
@@ -100,13 +115,21 @@ def query_status(location, application_num, passport_number, surname, captchaHan
         print(e)
         return {"success": False, "error": f"POST status form failed: {e}"}
     print(f"Status form response: {r.status_code}, bytes={len(r.text)}")
+    # Full HTML dump for debugging when CEAC changes page structure.
+    print("Status form full response:")
+    print(r.text)
 
-    soup = BeautifulSoup(r.text, features="lxml")
+    panel_html = extract_update_panel_html(r.text, "ctl00_ContentPlaceHolder1_UpdatePanel1")
+    if panel_html:
+        print("Using updatePanel HTML for parsing.")
+        soup = BeautifulSoup(panel_html, features="lxml")
+    else:
+        soup = BeautifulSoup(r.text, features="lxml")
     status_tag = soup.find("span", id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblStatus")
     if not status_tag:
-        # Dump a small snippet for debugging when the expected tag is missing.
-        print("Status tag not found; response snippet follows.")
-        print(r.text[:1000])
+        # Dump full response to diagnose DOM changes.
+        print("Status tag not found; full response follows.")
+        print(r.text)
         return {"success": False, "error": "Status tag not found in response"}
 
     application_num_returned = soup.find("span", id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblCaseNo").string
