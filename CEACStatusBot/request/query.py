@@ -23,14 +23,23 @@ def query_status(location, application_num, passport_number, surname, captchaHan
         r = session.get(url=f"{ROOT}/ceacstattracker/status.aspx?App=NIV", headers=headers)
     except Exception as e:
         print(e)
-        return {"success": False}
+        return {"success": False, "error": f"GET status page failed: {e}"}
+    print(f"Status page response: {r.status_code}, bytes={len(r.text)}")
 
     soup = BeautifulSoup(r.text, features="lxml")
 
     # Find captcha image
     captcha = soup.find(name="img", id="c_status_ctl00_contentplaceholder1_defaultcaptcha_CaptchaImage")
+    if not captcha or not captcha.get("src"):
+        print("Captcha image tag not found or missing src.")
+        return {"success": False, "error": "Captcha image tag not found"}
     image_url = ROOT + captcha["src"]
-    img_resp = session.get(image_url)
+    try:
+        img_resp = session.get(image_url)
+    except Exception as e:
+        print(e)
+        return {"success": False, "error": f"GET captcha image failed: {e}"}
+    print(f"Captcha image response: {img_resp.status_code}, bytes={len(img_resp.content)}")
 
     # Resolve captcha
     captcha_num = captchaHandle.solve(img_resp.content)
@@ -38,6 +47,9 @@ def query_status(location, application_num, passport_number, surname, captchaHan
 
     # Find the correct value for the location dropdown
     location_dropdown = soup.find("select", id="Location_Dropdown")
+    if not location_dropdown:
+        print("Location dropdown not found.")
+        return {"success": False, "error": "Location dropdown not found"}
     location_value = None
     for option in location_dropdown.find_all("option"):
         if location in option.text:
@@ -46,7 +58,7 @@ def query_status(location, application_num, passport_number, surname, captchaHan
 
     if not location_value:
         print("Location not found in dropdown options.")
-        return {"success": False}
+        return {"success": False, "error": "Location not found in dropdown options"}
 
     # Fill form
     def update_from_current_page(cur_page, name, data):
@@ -86,12 +98,16 @@ def query_status(location, application_num, passport_number, surname, captchaHan
         r = session.post(url=f"{ROOT}/ceacstattracker/status.aspx", headers=headers, data=data)
     except Exception as e:
         print(e)
-        return {"success": False}
+        return {"success": False, "error": f"POST status form failed: {e}"}
+    print(f"Status form response: {r.status_code}, bytes={len(r.text)}")
 
     soup = BeautifulSoup(r.text, features="lxml")
     status_tag = soup.find("span", id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblStatus")
     if not status_tag:
-        return {"success": False}
+        # Dump a small snippet for debugging when the expected tag is missing.
+        print("Status tag not found; response snippet follows.")
+        print(r.text[:1000])
+        return {"success": False, "error": "Status tag not found in response"}
 
     application_num_returned = soup.find("span", id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblCaseNo").string
     assert application_num_returned == application_num
