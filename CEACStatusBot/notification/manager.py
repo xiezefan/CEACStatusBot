@@ -54,7 +54,8 @@ class NotificationManager:
         )
         # Avoid sending when the status fetch fails or is incomplete.
         if not res.get("success"):
-            print("Status query failed; skip notification.")
+            # Surface error details to help diagnose CEAC response changes or captcha failures.
+            print(f"Status query failed; skip notification. error={res.get('error')}")
             return
         current_status = res["status"]
         current_last_updated = res["case_last_updated"]
