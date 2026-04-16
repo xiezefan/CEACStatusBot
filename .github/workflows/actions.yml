@@ -6,7 +6,7 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: '17 */5 * * *' # Run every 5 hours
+    - cron: '17 */20 * * *' # Run every 50 hours
 
 jobs:
   build:
